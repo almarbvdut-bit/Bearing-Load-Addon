@@ -64,6 +64,7 @@ gradlew.bat build
 
 По вопросам, сообщениям об ошибках и предложениям по улучшению пиши мне в Discord: **@almar_b_v_d**.
 """
-out = "/mnt/data/Bearing-Load-Addon-README-RU.md"
-pypandoc.convert_text(markdown_ru, to="md", format="md", outputfile=out, extra_args=["--standalone"])
-print(f"Готово: {out} ({os.path.getsize(out)} байт)")
+## Лицензия 
+
+Этот проект распространяется под лицензией [MIT](LICENSE).
+
