@@ -4,7 +4,8 @@
   "package": "com.almar_b_v_d.bearing_load_addon.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "SwivelBearingMixin"
+    "SwivelBearingMixin",
+    "KineticBlockEntityStressAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

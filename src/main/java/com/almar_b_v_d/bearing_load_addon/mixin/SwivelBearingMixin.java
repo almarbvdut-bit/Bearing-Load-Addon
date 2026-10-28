@@ -48,11 +48,8 @@ public abstract class SwivelBearingMixin {
     }
 
     /*
-     * Adds mass-based stress to the bearing's base stress.
-     *
-     * Create multiplies base stress by the absolute theoretical
-     * speed when calculating network stress, so speed is not
-     * multiplied here a second time.
+     * Calculate the base stress with the mass contribution.
+     * Create applies the theoretical speed to the stress later.
      */
     @Inject(
             method = "calculateStressApplied()F",
@@ -72,11 +69,6 @@ public abstract class SwivelBearingMixin {
         boolean log = call <= 5 || call % 100 == 0;
 
         if (level == null || level.isClientSide) {
-            if (log) {
-                bearingload$LOGGER.info(
-                        "[CALCULATE] Skipped on client or Level is null"
-                );
-            }
             return;
         }
 
@@ -86,6 +78,8 @@ public abstract class SwivelBearingMixin {
         boolean assembled = bearing.isAssembled();
 
         if (!enabled || !assembled) {
+            bearingload$setLastStressApplied(bearing, originalStress);
+
             if (log) {
                 bearingload$LOGGER.info(
                         "[CALCULATE] pos={}, enabled={}, assembled={}, " +
@@ -96,6 +90,7 @@ public abstract class SwivelBearingMixin {
                         originalStress
                 );
             }
+
             return;
         }
 
@@ -104,6 +99,14 @@ public abstract class SwivelBearingMixin {
 
         float addedStress = (float) (mass * multiplier);
         float result = originalStress + addedStress;
+
+        /*
+         * Important:
+         * persist exactly the stress value returned to Create.
+         * This allows Create to subtract the previous contribution
+         * correctly when rebuilding a saved kinetic network.
+         */
+        bearingload$setLastStressApplied(bearing, result);
 
         if (log) {
             bearingload$LOGGER.info(
@@ -122,9 +125,11 @@ public abstract class SwivelBearingMixin {
     }
 
     /*
-     * Recheck the network after assembly and during normal ticking.
-     * Mass may become available after the kinetic network has first
-     * registered its members.
+     * Reconcile the registered network members.
+     *
+     * The mass contribution must belong to exactly one member:
+     * the bearing if registered, otherwise its extra kinetics.
+     * The other member retains only its normal Create stress.
      */
     @Inject(
             method = "tick()V",
@@ -153,8 +158,6 @@ public abstract class SwivelBearingMixin {
 
         double multiplier = BearingLoadConfig.LOAD_MULTIPLIER.get();
 
-        // SwivelBearingBlockEntity.calculateStressApplied() normally
-        // returns zero, so its desired base stress is mass * multiplier.
         float addedMassStress = enabled && assembled
                 ? (float) (mass * multiplier)
                 : 0.0F;
@@ -171,77 +174,46 @@ public abstract class SwivelBearingMixin {
             );
         }
 
-        boolean bearingHasNetwork = bearing.hasNetwork();
-        boolean extraHasNetwork = extra != null && extra.hasNetwork();
+        boolean bearingIsMember =
+                bearingload$isRegisteredMember(bearing);
 
-        boolean bearingIsMember = false;
-        boolean extraIsMember = false;
-
-        Float bearingPreviousStress = null;
-        Float extraPreviousStress = null;
+        boolean extraIsMember =
+                extra != null && bearingload$isRegisteredMember(extra);
 
         boolean updated = false;
 
         /*
-         * Prefer the actual bearing if it is a registered member.
+         * Prefer the bearing if it is a network member.
          */
-        if (bearingHasNetwork) {
-            try {
-                KineticNetwork network = bearing.getOrCreateNetwork();
-
-                bearingIsMember = network.members.containsKey(bearing);
-
-                if (bearingIsMember) {
-                    bearingPreviousStress = network.members.get(bearing);
-
-                    updated = bearingload$updateMemberStress(
-                            bearing,
-                            addedMassStress,
-                            "bearing",
-                            log
-                    );
-                }
-            } catch (RuntimeException e) {
-                bearingload$LOGGER.error(
-                        "[NETWORK ERROR] Failed to update bearing network at {}",
-                        bearing.getBlockPos(),
-                        e
-                );
-            }
+        if (bearingIsMember) {
+            updated = bearingload$updateMemberStress(
+                    bearing,
+                    addedMassStress,
+                    "bearing",
+                    log
+            );
         }
 
         /*
-         * If the bearing itself is not a member, try its extra kinetics.
-         * Keep the extra block's normal Create stress and add mass stress.
+         * Always reconcile extra kinetics too.
+         * Do not add the same mass contribution twice.
          */
-        if (!updated && extra != null && extraHasNetwork) {
-            try {
-                KineticNetwork network = extra.getOrCreateNetwork();
+        if (extraIsMember) {
+            float extraVanillaStress = extra.calculateStressApplied();
 
-                extraIsMember = network.members.containsKey(extra);
+            float desiredExtraStress = extraVanillaStress
+                    + (bearingIsMember ? 0.0F : addedMassStress);
 
-                if (extraIsMember) {
-                    extraPreviousStress = network.members.get(extra);
+            boolean extraUpdated = bearingload$updateMemberStress(
+                    extra,
+                    desiredExtraStress,
+                    bearingIsMember
+                            ? "extra-kinetics-cleanup"
+                            : "extra-kinetics",
+                    log
+            );
 
-                    float extraVanillaStress = extra.calculateStressApplied();
-
-                    float desiredExtraStress =
-                            extraVanillaStress + addedMassStress;
-
-                    updated = bearingload$updateMemberStress(
-                            extra,
-                            desiredExtraStress,
-                            "extra-kinetics",
-                            log
-                    );
-                }
-            } catch (RuntimeException e) {
-                bearingload$LOGGER.error(
-                        "[NETWORK ERROR] Failed to update extra kinetics network at {}",
-                        bearing.getBlockPos(),
-                        e
-                );
-            }
+            updated = updated || extraUpdated;
         }
 
         if (log) {
@@ -259,35 +231,12 @@ public abstract class SwivelBearingMixin {
                 );
             }
 
-            float speed = 0.0F;
-            float theoreticalSpeed = 0.0F;
-            String extraStatus;
-
-            if (extra == null) {
-                extraStatus = "NULL";
-            } else {
-                try {
-                    speed = extra.getSpeed();
-                    theoreticalSpeed = extra.getTheoreticalSpeed();
-                    extraStatus = "OK";
-                } catch (RuntimeException e) {
-                    extraStatus = "ERROR";
-                    bearingload$LOGGER.error(
-                            "[SPEED ERROR] pos={}",
-                            bearing.getBlockPos(),
-                            e
-                    );
-                }
-            }
-
             bearingload$LOGGER.info(
                     "[NETWORK DIAGNOSTIC] pos={}, assembled={}, " +
                             "enabled={}, attached={}, containing={}, mass={}, " +
-                            "multiplier={}, addedMassStress={}, bearingNetwork={}, " +
-                            "bearingMember={}, bearingPreviousStress={}, " +
-                            "extraClass={}, extraNetwork={}, extraMember={}, " +
-                            "extraPreviousStress={}, extraStatus={}, speed={}, " +
-                            "theoreticalSpeed={}, updated={}",
+                            "multiplier={}, addedMassStress={}, " +
+                            "bearingMember={}, extraClass={}, extraMember={}, " +
+                            "updated={}",
                     bearing.getBlockPos(),
                     assembled,
                     enabled,
@@ -296,16 +245,9 @@ public abstract class SwivelBearingMixin {
                     mass,
                     multiplier,
                     addedMassStress,
-                    bearingHasNetwork,
                     bearingIsMember,
-                    bearingPreviousStress,
                     extra == null ? "null" : extra.getClass().getName(),
-                    extraHasNetwork,
                     extraIsMember,
-                    extraPreviousStress,
-                    extraStatus,
-                    speed,
-                    theoreticalSpeed,
                     updated
             );
         }
@@ -313,15 +255,36 @@ public abstract class SwivelBearingMixin {
         if (!updated && log) {
             bearingload$LOGGER.warn(
                     "[NETWORK NOT UPDATED] pos={}, bearingNetwork={}, " +
-                            "bearingMember={}, extraNetwork={}, extraMember={}. " +
-                            "Neither object was updated because it was not " +
-                            "a registered member of a kinetic network.",
+                            "bearingMember={}, extraNetwork={}, extraMember={}",
                     bearing.getBlockPos(),
-                    bearingHasNetwork,
+                    bearing.hasNetwork(),
                     bearingIsMember,
-                    extraHasNetwork,
+                    extra != null && extra.hasNetwork(),
                     extraIsMember
             );
+        }
+    }
+
+    @Unique
+    private boolean bearingload$isRegisteredMember(
+            KineticBlockEntity member
+    ) {
+        if (member == null || !member.hasNetwork()) {
+            return false;
+        }
+
+        try {
+            KineticNetwork network = member.getOrCreateNetwork();
+
+            return network != null
+                    && network.members.containsKey(member);
+        } catch (RuntimeException e) {
+            bearingload$LOGGER.error(
+                    "[NETWORK CHECK ERROR] Failed to check member at {}",
+                    member.getBlockPos(),
+                    e
+            );
+            return false;
         }
     }
 
@@ -332,38 +295,64 @@ public abstract class SwivelBearingMixin {
             String source,
             boolean log
     ) {
-        if (!member.hasNetwork()) {
+        if (member == null || !member.hasNetwork()) {
             return false;
         }
 
-        KineticNetwork network = member.getOrCreateNetwork();
+        try {
+            KineticNetwork network = member.getOrCreateNetwork();
 
-        if (!network.members.containsKey(member)) {
-            return false;
-        }
-
-        Float previousStress = network.members.get(member);
-
-        if (previousStress == null
-                || Math.abs(previousStress - desiredStress) > 0.01F) {
-
-            network.updateStressFor(member, desiredStress);
-
-            if (log) {
-                bearingload$LOGGER.info(
-                        "[NETWORK UPDATE] source={}, pos={}, oldStress={}, " +
-                                "newStress={}, speed={}, theoreticalSpeed={}",
-                        source,
-                        member.getBlockPos(),
-                        previousStress,
-                        desiredStress,
-                        member.getSpeed(),
-                        member.getTheoreticalSpeed()
-                );
+            if (network == null || !network.members.containsKey(member)) {
+                return false;
             }
-        }
 
-        return true;
+            /*
+             * Keep the saved value consistent even if the stress value
+             * in the network map does not need an update.
+             */
+            bearingload$setLastStressApplied(member, desiredStress);
+
+            Float previousStress = network.members.get(member);
+
+            if (previousStress == null
+                    || Math.abs(previousStress - desiredStress) > 0.01F) {
+
+                network.updateStressFor(member, desiredStress);
+
+                if (log) {
+                    bearingload$LOGGER.info(
+                            "[NETWORK UPDATE] source={}, pos={}, " +
+                                    "oldStress={}, newStress={}, speed={}, " +
+                                    "theoreticalSpeed={}",
+                            source,
+                            member.getBlockPos(),
+                            previousStress,
+                            desiredStress,
+                            member.getSpeed(),
+                            member.getTheoreticalSpeed()
+                    );
+                }
+            }
+
+            return true;
+        } catch (RuntimeException e) {
+            bearingload$LOGGER.error(
+                    "[NETWORK UPDATE ERROR] source={}, pos={}",
+                    source,
+                    member.getBlockPos(),
+                    e
+            );
+            return false;
+        }
+    }
+
+    @Unique
+    private void bearingload$setLastStressApplied(
+            KineticBlockEntity member,
+            float stress
+    ) {
+        ((KineticBlockEntityStressAccessor) (Object) member)
+                .bearingload$setLastStressApplied(stress);
     }
 
     @Unique
@@ -404,16 +393,11 @@ public abstract class SwivelBearingMixin {
         try {
             MassData massData = serverAttached.getMassTracker();
 
-            if (massData == null) {
+            if (massData == null || massData.isInvalid()) {
                 if (log) {
-                    bearingload$LOGGER.warn("[MASS] MassData is null");
-                }
-                return 0.0;
-            }
-
-            if (massData.isInvalid()) {
-                if (log) {
-                    bearingload$LOGGER.warn("[MASS] MassData is invalid");
+                    bearingload$LOGGER.warn(
+                            "[MASS] MassData is null or invalid"
+                    );
                 }
                 return 0.0;
             }
