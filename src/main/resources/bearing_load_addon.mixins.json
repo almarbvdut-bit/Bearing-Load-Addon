@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.almar_b_v_d.bearing_load_addon.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "SwivelBearingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

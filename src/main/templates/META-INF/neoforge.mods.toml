@@ -1,0 +1,63 @@
+
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "${mod_authors}"
+description = '''${mod_description}'''
+
+# Регистрируем конфигурацию Mixin
+[[mixins]]
+config = "${mod_id}.mixins.json"
+
+# NeoForge
+[[dependencies."${mod_id}"]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# Minecraft
+[[dependencies."${mod_id}"]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# Create — используется KineticBlockEntity и кинетическая сеть
+[[dependencies."${mod_id}"]]
+modId = "create"
+type = "required"
+versionRange = "[6.0.10,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Create Simulated — целевой класс SwivelBearingBlockEntity
+[[dependencies."${mod_id}"]]
+modId = "simulated"
+type = "required"
+versionRange = "[1.3.2,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Create Aeronautics
+[[dependencies."${mod_id}"]]
+modId = "aeronautics"
+type = "required"
+versionRange = "[1.3.2,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Sable — физические подуровни и MassData
+[[dependencies."${mod_id}"]]
+modId = "sable"
+type = "required"
+versionRange = "[2.0.5,)"
+ordering = "AFTER"
+side = "BOTH"

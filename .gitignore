@@ -1,0 +1,54 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+
+# Eclipse / Buildship
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and crash reports
+*.log
+logs/
+crash-reports/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+*.local
+secrets.properties
+local.properties
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Generated Minecraft / mod development files
+run/
+runs/

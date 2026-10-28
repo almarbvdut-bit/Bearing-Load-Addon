@@ -1,0 +1,5 @@
+{
+  "itemGroup.bearing_load_addon": "Example Mod Tab",
+  "block.bearing_load_addon.example_block": "Example Block",
+  "item.bearing_load_addon.example_item": "Example Item"
+}
