@@ -1,156 +1,93 @@
 ::: {align="center"}
 # Bearing Load Addon
 
-### Mass-aware stress calculations for Create swivel bearings
-
-A lightweight compatibility addon that makes the stress impact of
-bearing-mounted contraptions account for their load.
-
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-2ea043?style=for-the-badge)](https://www.minecraft.net/)
-[![NeoForge](https://img.shields.io/badge/Mod%20Loader-NeoForge-orange?style=for-the-badge)](https://neoforged.net/)
+[![NeoForge](https://img.shields.io/badge/Загрузчик-NeoForge-orange?style=for-the-badge)](https://neoforged.net/)
 [![Create](https://img.shields.io/badge/Create-6.0.10-blue?style=for-the-badge)](https://modrinth.com/mod/create)
+[![Create:
+Aeronautics](https://img.shields.io/badge/Create-Aeronautics-blueviolet?style=for-the-badge)](https://github.com/)
 :::
 
 ------------------------------------------------------------------------
 
-## ✨ What is this?
+## ✨ О моде
 
-**Bearing Load Addon** is a small addon for modded Minecraft focused on
-the interaction between **Create**, rotating contraptions, and swivel
-bearings.
+## ⚙️ Как это работает?
 
-The addon modifies the bearing stress calculation through a **Mixin**,
-so the load associated with a contraption's mass can be taken into
-account instead of relying only on the original calculation.
+Аддон изменяет расчёт нагрузки на поворотном подшипнике. Управление
+вращением и остальные механики остаются за исходными модами.
 
-The goal is simple: make bearing-driven machinery behave in a way that
-better reflects the weight it is carrying.
+## 📦 Требования
 
-> This project is a compatibility/behaviour addon, not a standalone
-> replacement for Create.
+  Компонент             Версия
+  --------------------- ------------------------------------------
+  Minecraft             `1.21.1`
+  NeoForge              Версия, указанная в конфигурации проекта
+  Create                `6.0.10`
+  Sable                 `2.0.5`
+  Create: Aeronautics   `1.3.2`
 
-## ⚙️ How it works
+Установи необходимые моды в тот же экземпляр Minecraft. Совместимость с
+другими версиями пока не гарантируется.
 
-At a high level, the addon hooks into the relevant bearing logic and
-adjusts the stress calculation.
+## 🚀 Установка
 
-1.  **A bearing drives a contraption.** Create handles the bearing and
-    contraption as usual.
-2.  **The addon hooks into the calculation.** A Mixin injects into the
-    target logic without replacing the whole Create mod.
-3.  **Mass becomes part of the stress calculation.** The modified logic
-    accounts for the contraption's load when calculating the bearing's
-    stress impact.
-4.  **Create continues handling the machinery.** The addon relies on
-    Create's existing systems for the rest of the behaviour.
+1.  Установи **Minecraft 1.21.1** с подходящей версией NeoForge.
+2.  Установи необходимые зависимости, перечисленные выше.
+3.  Скачай `.jar` аддона из раздела **Releases**, если готовый релиз
+    опубликован.
+4.  Помести `.jar` в папку `mods` своего игрового экземпляра.
+5.  Запусти игру. Если возникнет ошибка, проверь игровой лог.
 
-### Why use a Mixin?
+Если готового релиза пока нет, аддон можно собрать из исходного кода ---
+инструкция ниже.
 
-A Mixin allows this addon to alter a specific part of another mod's code
-at runtime. That keeps the change focused and avoids maintaining a full
-fork of Create.
+## 🛠️ Сборка из исходного кода
 
-**Implementation note:** exact formula details and the precise injection
-point depend on the source code for the current build. This README
-describes the intended behaviour at a high level rather than claiming a
-particular formula or multiplier.
-
-## 📦 Requirements
-
-The project is developed for the following environment:
-
-  Component            Version
-  -------------------- ----------------------------
-  Minecraft            `1.21.1`
-  NeoForge             Project-configured version
-  Create               `6.0.10`
-  Sable                `2.0.5`
-  Create Aeronautics   `1.3.2`
-
-Install the required mods in the Minecraft instance you want to use.
-Keep the versions aligned with the ones listed above; other versions
-have not been confirmed compatible.
-
-## 🚀 Installation
-
-1.  Install **Minecraft 1.21.1** with the NeoForge version required by
-    the build.
-2.  Install the required dependencies listed above.
-3.  Download the addon `.jar` from the project's **Releases** page, if a
-    release is available.
-4.  Place the addon `.jar` in your instance's `mods` folder.
-5.  Launch the game and check the log if the game fails to start.
-
-If there is no published release yet, the project may need to be built
-from source (see below).
-
-## 🛠️ Building from source
-
-You will need a compatible JDK for the Minecraft/NeoForge toolchain and
-Git.
+Для сборки понадобятся Git и совместимая версия JDK для используемой
+версии Minecraft и NeoForge.
 
 ``` bash
 git clone https://github.com/almarbvdut-bit/Bearing-Load-Addon.git
 cd Bearing-Load-Addon
 ```
 
-Build with the included Gradle wrapper:
-
-**Windows**
+**Windows:**
 
 ``` bat
 gradlew.bat build
 ```
 
-**Linux / macOS**
+**Linux / macOS:**
 
 ``` bash
 ./gradlew build
 ```
 
-If the build succeeds, look for the resulting mod JAR in:
+Если сборка завершится успешно, готовый файл мода можно найти в папке
+`build/libs/`.
 
-``` text
-build/libs/
-```
+## 🧪 Тестирование
 
-The exact Java version and dependency setup are determined by the Gradle
-configuration in this repository. If Gradle reports a missing
-dependency, check the project setup and required local libraries before
-changing versions.
+При проверке аддона сравнивай поведение подшипника с конструкциями
+разной массы. Для корректного сравнения используй одинаковые версии
+Minecraft, NeoForge, Create и Create: Aeronautics.
 
-## 🧪 Testing notes
+Совместимость со всеми дополнениями Create и всеми сочетаниями версий не
+гарантируется.
 
-When testing a build, compare the behaviour of a bearing-driven
-contraption with different loads and keep the Minecraft, NeoForge,
-Create, and addon versions consistent.
+## 🐛 Сообщить об ошибке или предложить изменение
 
-This project is focused on bearing stress behaviour. It does not promise
-compatibility with every Create addon or every version combination.
+-   Создай [Issue на
+    GitHub](https://github.com/almarbvdut-bit/Bearing-Load-Addon/issues).
+-   Укажи версии Minecraft, NeoForge, Create и Create: Aeronautics.
+-   Приложи соответствующую часть файла `latest.log` и опиши, как
+    повторить проблему.
 
-## 🐛 Issues and contributions
+Предложения по улучшению и Pull Request приветствуются.
 
-Found a bug, a compatibility problem, or an unexpected stress result?
+## 📄 Лицензия
 
--   Open an
-    [Issue](https://github.com/almarbvdut-bit/Bearing-Load-Addon/issues).
--   Include your Minecraft, NeoForge, Create, and addon versions.
--   Attach the relevant part of `latest.log` and a short description of
-    how to reproduce the problem.
-
-Pull requests and technical discussion are welcome. Please keep changes
-focused and test them against the project's target environment.
-
-## 📄 License
-
-Check the repository for a `LICENSE` file before redistributing or
-reusing this project. If no license is present, all rights remain with
-the copyright holder by default.
-
-------------------------------------------------------------------------
-
-::: {align="center"}
-**Built for heavier contraptions and more meaningful bearing stress.**
-:::
-# Bearing-Load-Addon
-Adds mass-based stress calculations to Create Aeronautics swivel bearings, making heavier attached structures exert greater mechanical stress.
+Перед повторным использованием или распространением проекта проверь
+наличие файла `LICENSE` в репозитории. Если лицензия не указана,
+автоматически считать код свободным для использования нельзя.
