@@ -1,7 +1,3 @@
-import pypandoc, os
-
-markdown_ru = """<div align="center">
-
 # Bearing Load Addon
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-2ea043?style=for-the-badge)](https://www.minecraft.net/)
