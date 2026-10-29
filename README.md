@@ -90,7 +90,7 @@ For testing, use the specified versions of Minecraft, NeoForge, Create, Sable, a
 
 ## 💬 Contact
 
-For questions, bug reports, or suggestions, contact me on Discord: **[@almar_b_v_d](https://discord.com/users/856120201011789854?utm_source=chatgpt.com)**.
+For questions, bug reports, or suggestions, contact me on Discord: **[Discord: @almar_b_v_d](https://discord.com/users/856120201011789854)**.
 
 ## 📄 License
 
