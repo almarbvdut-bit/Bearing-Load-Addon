@@ -1,13 +1,3 @@
-# Bearing Load Addon
-
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-2ea043?style=for-the-badge)](https://www.minecraft.net/)
-[![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-orange?style=for-the-badge)](https://neoforged.net/)
-[![Create](https://img.shields.io/badge/Create-6.0.10-blue?style=for-the-badge)](https://modrinth.com/mod/create)
-[![Create: Aeronautics](https://img.shields.io/badge/Create%3A%20Aeronautics-1.3.2-blueviolet?style=for-the-badge)](https://github.com/)
-
-</div>
-
----
 
 # Bearing Load Addon
 
