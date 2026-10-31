@@ -1,3 +1,6 @@
+/**
+ * Provides access to Create's internal applied stress value.
+ */
 
 package com.almar_b_v_d.bearing_load_addon.mixin;
 
@@ -10,4 +13,7 @@ public interface KineticBlockEntityStressAccessor {
 
     @Accessor(value = "lastStressApplied", remap = false)
     void bearingload$setLastStressApplied(float stress);
+
+    @Accessor(value = "lastStressApplied", remap = false)
+    float bearingload$getLastStressApplied();
 }

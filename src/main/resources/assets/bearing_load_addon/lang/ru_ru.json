@@ -1,3 +1,5 @@
 {
-  "bearing_load_addon.gui.goggles.at_current_speed_and_weight": "при текущей скорости и весе"
+  "bearing_load_addon.gui.goggles.assembly_mass": "Масса конструкции: %s",
+  "bearing_load_addon.gui.goggles.assembly_stress": "Нагрузка с учётом массы: %s ен при %s об/мин",
+  "bearing_load_addon.gui.goggles.bearing_inactive": "Подшипник не активирован"
 }

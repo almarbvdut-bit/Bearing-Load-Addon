@@ -1,4 +1,7 @@
-
+/**
+ * Extends swivel bearing stress calculation with rotating structure mass
+ * and keeps the kinetic network stress values consistent.
+ */
 package com.almar_b_v_d.bearing_load_addon.mixin;
 
 import com.almar_b_v_d.bearing_load_addon.config.BearingLoadConfig;
@@ -36,7 +39,10 @@ public abstract class SwivelBearingMixin {
     @Unique
     private static final AtomicInteger bearingload$STRESS_CALLS =
             new AtomicInteger();
-
+    @Unique
+    private static boolean bearingload$isDebugLoggingEnabled() {
+        return BearingLoadConfig.ENABLE_DEBUG_LOGGING.get();
+    }
     @Shadow(remap = false)
     private SubLevel getAttachedSubLevel() {
         return null;
@@ -66,7 +72,8 @@ public abstract class SwivelBearingMixin {
         Level level = ((BlockEntity) (Object) this).getLevel();
 
         int call = bearingload$STRESS_CALLS.incrementAndGet();
-        boolean log = call <= 5 || call % 100 == 0;
+        boolean log = bearingload$isDebugLoggingEnabled()
+                && (call <= 5 || call % 100 == 0);
 
         if (level == null || level.isClientSide) {
             return;
@@ -147,7 +154,8 @@ public abstract class SwivelBearingMixin {
         }
 
         int call = bearingload$TICK_CALLS.incrementAndGet();
-        boolean log = call <= 5 || call % 100 == 0;
+        boolean log = bearingload$isDebugLoggingEnabled()
+                && (call <= 5 || call % 100 == 0);
 
         boolean enabled = BearingLoadConfig.ENABLE_MASS_LOAD.get();
         boolean assembled = bearing.isAssembled();
@@ -167,11 +175,13 @@ public abstract class SwivelBearingMixin {
         try {
             extra = bearing.getExtraKinetics();
         } catch (RuntimeException e) {
-            bearingload$LOGGER.error(
-                    "[EXTRA ERROR] Cannot get extra kinetics at {}",
-                    bearing.getBlockPos(),
-                    e
-            );
+            if (bearingload$isDebugLoggingEnabled()) {
+                bearingload$LOGGER.error(
+                        "[EXTRA ERROR] Cannot get extra kinetics at {}",
+                        bearing.getBlockPos(),
+                        e
+                );
+            }
         }
 
         boolean bearingIsMember =
@@ -279,11 +289,13 @@ public abstract class SwivelBearingMixin {
             return network != null
                     && network.members.containsKey(member);
         } catch (RuntimeException e) {
-            bearingload$LOGGER.error(
-                    "[NETWORK CHECK ERROR] Failed to check member at {}",
-                    member.getBlockPos(),
-                    e
-            );
+            if (bearingload$isDebugLoggingEnabled()) {
+                bearingload$LOGGER.error(
+                        "[NETWORK CHECK ERROR] Failed to check member at {}",
+                        member.getBlockPos(),
+                        e
+                );
+            }
             return false;
         }
     }
@@ -319,6 +331,8 @@ public abstract class SwivelBearingMixin {
 
                 network.updateStressFor(member, desiredStress);
 
+                member.sendData();
+
                 if (log) {
                     bearingload$LOGGER.info(
                             "[NETWORK UPDATE] source={}, pos={}, " +
@@ -336,12 +350,14 @@ public abstract class SwivelBearingMixin {
 
             return true;
         } catch (RuntimeException e) {
-            bearingload$LOGGER.error(
-                    "[NETWORK UPDATE ERROR] source={}, pos={}",
-                    source,
-                    member.getBlockPos(),
-                    e
-            );
+            if (bearingload$isDebugLoggingEnabled()) {
+                bearingload$LOGGER.error(
+                        "[NETWORK UPDATE ERROR] source={}, pos={}",
+                        source,
+                        member.getBlockPos(),
+                        e
+                );
+            }
             return false;
         }
     }

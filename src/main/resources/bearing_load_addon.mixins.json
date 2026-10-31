@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "SwivelBearingMixin",
-    "KineticBlockEntityStressAccessor"
+    "KineticBlockEntityStressAccessor",
+    "SwivelBearingTooltipDataMixin",
+    "BearingStressTooltipMixin"
   ],
   "injectors": {
     "defaultRequire": 1

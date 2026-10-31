@@ -1,5 +1,5 @@
 {
-  "itemGroup.bearing_load_addon": "Example Mod Tab",
-  "block.bearing_load_addon.example_block": "Example Block",
-  "item.bearing_load_addon.example_item": "Example Item"
+  "bearing_load_addon.gui.goggles.assembly_mass": "Assembly mass: %s",
+  "bearing_load_addon.gui.goggles.assembly_stress": "Stress including mass: %s SU at %s RPM",
+  "bearing_load_addon.gui.goggles.bearing_inactive": "Bearing is not active"
 }
